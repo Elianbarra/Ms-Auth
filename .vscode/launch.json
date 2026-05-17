@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot - MsAuthApplication",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.hospital.msauth.MsAuthApplication",
+            "projectName": "ms-auth",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "javaHome": "/opt/homebrew/Cellar/openjdk@21/21.0.10/libexec/openjdk.jdk/Contents/Home"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-MsAuthApplication<Ms-Auth>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.hospital.msauth.MsAuthApplication",
+            "projectName": "Ms-Auth",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

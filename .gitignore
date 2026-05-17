@@ -1,0 +1,26 @@
+HELP.md
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### VS Code ###
+.vscode/
+
+### Env ###
+.env
+*.env
+
+### OS ###
+.DS_Store
+
+### Local Gradle config (paths específicos de la máquina) ###
+gradle.properties
