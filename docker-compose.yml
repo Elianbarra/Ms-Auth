@@ -1,0 +1,37 @@
+services:
+  postgresql:
+    image: postgres:17-alpine
+    container_name: ms-auth-postgresql
+    environment:
+      POSTGRES_DB: msauth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/postgresql/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d msauth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ms-auth:
+    build: .
+    container_name: ms-auth
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgresql:5432/msauth_db
+      DB_USER: postgres
+      DB_PASS: password
+      SECURITY_JWT_ISSUER: http://ms-auth:8080
+      SECURITY_JWT_ACCESS_TOKEN_MINUTES: 30
+      SECURITY_JWT_PRIVATE_KEY_PATH: /keys/private_key.pem
+      SECURITY_JWT_PUBLIC_KEY_PATH: /keys/public_key.pem
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./volumes/ms-auth/keys/private_key.pem:/keys/private_key.pem:ro
+      - ./volumes/ms-auth/keys/public_key.pem:/keys/public_key.pem:ro

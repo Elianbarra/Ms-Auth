@@ -23,41 +23,44 @@ repositories {
 }
 
 dependencies {
-    // Web
+    // Web + Validation + JPA
     implementation("org.springframework.boot:spring-boot-starter-web")
-
-    // Security
-    implementation("org.springframework.boot:spring-boot-starter-security")
-
-    // JPA + PostgreSQL (NeonDB)
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("org.postgresql:postgresql")
 
-    // Flyway - migraciones de base de datos
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
+    // Security + OAuth2
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.security:spring-security-oauth2-jose:6.4.1")
 
-    // JWT
+    // Nimbus JWT (transitiva, pero declarada explícitamente)
+    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
+
+    // JJWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 
-    // Validacion
-    implementation("org.springframework.boot:spring-boot-starter-validation")
+    // Base de datos
+    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+
+    // Actuator + dotenv
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    // Carga automatica del archivo .env
-    implementation("me.paulschwarz:spring-dotenv:4.0.0")
-
     // DevTools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-    // Test
+    // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.h2database:h2")
 }
 

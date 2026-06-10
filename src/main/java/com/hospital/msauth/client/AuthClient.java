@@ -9,17 +9,17 @@ import com.hospital.msauth.entity.enums.UserRole;
 import com.hospital.msauth.exception.CredentialAlreadyExistsException;
 import com.hospital.msauth.exception.InvalidCredentialsException;
 import com.hospital.msauth.repository.CredentialRepository;
-import com.hospital.msauth.util.JwtUtil;
-import io.jsonwebtoken.Claims;
+import com.hospital.msauth.service.JwtService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 /*
- * Patron Facade: oculta la complejidad de BCrypt, JWT y el repositorio
+ * Patron Facade: oculta la complejidad de BCrypt, JWT asimetrico y el repositorio
  * detras de metodos simples para el Controller.
  */
 @Component
@@ -29,7 +29,7 @@ public class AuthClient {
 
     private final CredentialRepository credentialRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     public void registerCredential(RegisterCredentialRequestDTO dto) {
         if (credentialRepository.existsByEmail(dto.getEmail())) {
@@ -59,11 +59,7 @@ public class AuthClient {
             throw new InvalidCredentialsException("Credenciales invalidas");
         }
 
-        String token = jwtUtil.generateToken(
-                credential.getEmail(),
-                credential.getRole().name(),
-                credential.getUserId()
-        );
+        String token = jwtService.generateToken(credential);
 
         log.info("Login exitoso para: {}", dto.getEmail());
 
@@ -76,17 +72,20 @@ public class AuthClient {
     }
 
     public TokenValidationResponseDTO validateToken(String token) {
-        if (!jwtUtil.isTokenValid(token)) {
+        try {
+            Jwt jwt = jwtService.decode(token);
+
+            String userIdValue = jwt.getClaimAsString("userId");
+            UUID userId = userIdValue != null ? UUID.fromString(userIdValue) : null;
+
+            return TokenValidationResponseDTO.builder()
+                    .valid(true)
+                    .email(jwt.getSubject())
+                    .role(jwt.getClaimAsString("role"))
+                    .userId(userId)
+                    .build();
+        } catch (RuntimeException e) {
             return TokenValidationResponseDTO.builder().valid(false).build();
         }
-
-        Claims claims = jwtUtil.extractClaims(token);
-
-        return TokenValidationResponseDTO.builder()
-                .valid(true)
-                .email(claims.getSubject())
-                .role(claims.get("role", String.class))
-                .userId(UUID.fromString(claims.get("userId", String.class)))
-                .build();
     }
 }

@@ -4,15 +4,16 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
-
   flyway:
     enabled: false
 
-jwt:
-  secret: dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3Rpbmctb25seQ==
-  expiration: 86400000
+security:
+  jwt:
+    issuer: http://localhost:8080
+    access-token-minutes: 30
+    private-key-path: ${user.dir}/src/test/resources/keys/private_key.pem
+    public-key-path: ${user.dir}/src/test/resources/keys/public_key.pem

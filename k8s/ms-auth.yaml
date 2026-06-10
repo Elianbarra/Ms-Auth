@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-auth
+  namespace: ms-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-auth
+  template:
+    metadata:
+      labels:
+        app: ms-auth
+    spec:
+      initContainers:
+        - name: wait-for-postgresql
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - until pg_isready -h postgresql -U postgres -d msauth_db; do echo waiting for postgresql; sleep 2; done
+      containers:
+        - name: ms-auth
+          image: ms-auth:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_URL
+              value: jdbc:postgresql://postgresql:5432/msauth_db
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASS
+              value: password
+            - name: SECURITY_JWT_ISSUER
+              value: http://ms-auth:8080
+            - name: SECURITY_JWT_ACCESS_TOKEN_MINUTES
+              value: "30"
+            - name: SECURITY_JWT_PRIVATE_KEY_PATH
+              value: /keys/private_key.pem
+            - name: SECURITY_JWT_PUBLIC_KEY_PATH
+              value: /keys/public_key.pem
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /keys
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 20
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: ms-auth-jwt-keys
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-auth
+  namespace: ms-auth
+spec:
+  type: ClusterIP
+  selector:
+    app: ms-auth
+  ports:
+    - port: 8080
+      targetPort: 8080

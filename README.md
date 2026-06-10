@@ -1,6 +1,6 @@
 # MS-AUTH — Microservicio de Autenticación
 
-Microservicio desarrollado con **Spring Boot 3.4.5** encargado de gestionar las credenciales y autenticación de los usuarios del sistema hospitalario. Almacena contraseñas encriptadas con **BCrypt** en su propia **NeonDB (PostgreSQL)** y emite **tokens JWT** para autenticar las sesiones.
+Microservicio desarrollado con **Spring Boot 3.4.5** encargado de gestionar las credenciales y autenticación de los usuarios del sistema hospitalario. Almacena contraseñas encriptadas con **BCrypt** en su propia **PostgreSQL** y emite **tokens JWT firmados con RSA**. Además expone **JWKS** en `/.well-known/jwks.json` para que otros servicios validen los tokens sin conocer la clave privada.
 
 ---
 
@@ -353,6 +353,15 @@ docker run -p 8080:8080 \
 
 > El archivo `.env` también puede montarse como volumen o pasarse con `--env-file .env` en lugar de declarar cada variable individualmente.
 
+### Docker Compose local con volúmenes propios
+
+Para desarrollo local, `docker-compose.yml` usa volúmenes del proyecto en `./volumes/`:
+
+- `./volumes/postgresql/data` guarda los datos de PostgreSQL.
+- `./volumes/ms-auth/keys/private_key.pem` y `./volumes/ms-auth/keys/public_key.pem` guardan las llaves RSA que usa MS-AUTH.
+
+Esto evita depender de archivos sueltos en la raíz del repositorio y mantiene todo el estado local del servicio en una sola carpeta.
+
 ---
 
 ## Configuración
@@ -374,6 +383,35 @@ JWT_EXPIRATION=86400000
 ```
 
 El servicio inicia en el puerto **8080**.
+
+---
+
+## Kubernetes
+
+Despliegue mínimo para correr `ms-auth` en Kubernetes local:
+
+- `k8s/namespace.yaml`: crea el namespace `ms-auth`.
+- `k8s/postgresql-pvc.yaml`: reserva `1Gi` para PostgreSQL.
+- `k8s/postgresql.yaml`: despliega PostgreSQL y su `Service` interno.
+- `k8s/ms-auth-secrets.yaml`: monta las llaves RSA como archivos en `/keys`.
+- `k8s/ms-auth.yaml`: despliega `ms-auth` y su `Service` interno.
+
+Aplicación:
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/postgresql-pvc.yaml
+kubectl apply -f k8s/postgresql.yaml
+kubectl apply -f k8s/ms-auth-secrets.yaml
+kubectl apply -f k8s/ms-auth.yaml
+```
+
+Prueba local:
+
+```bash
+kubectl get pods -n ms-auth
+kubectl port-forward svc/ms-auth 8080:8080 -n ms-auth
+```
 
 ### Railway (producción)
 
