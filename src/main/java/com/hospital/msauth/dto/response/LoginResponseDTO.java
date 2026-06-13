@@ -1,14 +1,15 @@
 package com.hospital.msauth.dto.response;
-
-import lombok.*;
-
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponseDTO {
+public class LoginResponseDTO {
 
     private String token;
     @Builder.Default

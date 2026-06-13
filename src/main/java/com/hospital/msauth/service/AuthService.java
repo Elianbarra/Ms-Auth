@@ -1,31 +1,26 @@
-package com.hospital.msauth.client;
+package com.hospital.msauth.service;
 
 import com.hospital.msauth.dto.request.LoginRequestDTO;
 import com.hospital.msauth.dto.request.RegisterCredentialRequestDTO;
-import com.hospital.msauth.dto.response.AuthResponseDTO;
+import com.hospital.msauth.dto.response.LoginResponseDTO;
 import com.hospital.msauth.dto.response.TokenValidationResponseDTO;
 import com.hospital.msauth.entity.UserCredential;
 import com.hospital.msauth.entity.enums.UserRole;
 import com.hospital.msauth.exception.CredentialAlreadyExistsException;
 import com.hospital.msauth.exception.InvalidCredentialsException;
 import com.hospital.msauth.repository.CredentialRepository;
-import com.hospital.msauth.service.JwtService;
 import java.util.UUID;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-/*
- * Patron Facade: oculta la complejidad de BCrypt, JWT asimetrico y el repositorio
- * detras de metodos simples para el Controller.
- */
-@Component
+@Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthClient {
+public class AuthService {
 
     private final CredentialRepository credentialRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,11 +38,11 @@ public class AuthClient {
                 .userId(dto.getUserId())
                 .build();
 
-        credentialRepository.save(credential);
+        credentialRepository.save(Objects.requireNonNull(credential));
         log.info("Credenciales registradas para userId: {}", dto.getUserId());
     }
 
-    public AuthResponseDTO login(LoginRequestDTO dto) {
+    public LoginResponseDTO login(LoginRequestDTO dto) {
         UserCredential credential = credentialRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Credenciales invalidas"));
 
@@ -63,7 +58,7 @@ public class AuthClient {
 
         log.info("Login exitoso para: {}", dto.getEmail());
 
-        return AuthResponseDTO.builder()
+        return LoginResponseDTO.builder()
                 .token(token)
                 .userId(credential.getUserId())
                 .email(credential.getEmail())
